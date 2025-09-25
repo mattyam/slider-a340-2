@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -72,6 +73,7 @@ html, body {
   border: 1px solid rgba(255,255,255,0.06);
   cursor: pointer;
   box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+  z-index: 10; /* Ensures buttons are above the track */
 }
 .btn svg {
   width: 20px;
@@ -122,9 +124,8 @@ html, body {
 
 <script>
 const images = [
-    'https://cdn.shopify.com/s/files/1/0055/5525/7434/files/FlightSimulator2024_MhywTQBfg5.png?v=1758797915',
-    'https://cdn.shopify.com/s/files/1/0055/5525/7434/files/FlightSimulator2024_qHkbSNNDzR.png?v=1758797913',
-    'https://cdn.shopify.com/s/files/1/0055/5525/7434/files/FlightSimulator2024_3bYBXOXy0q.png?v=1758797916'
+    'https://cdn.shopify.com/s/files/1/0055/5525/7434/files/FlightSimulator2024_kNlMkeM13K.png?v=1758798007',
+    'https://cdn.shopify.com/s/files/1/0055/5525/7434/files/FlightSimulator2024_6BeuoQIi2T.jpg?v=1758798286'
 ];
 
 const track = document.getElementById('track');
@@ -138,8 +139,9 @@ let isDragging = false;
 let startX = 0;
 let currentTranslate = 0;
 let prevTranslate = 0;
-let isMoving = false; // prevents fast clicks
+let isMoving = false; // Prevents fast clicks during transition
 
+// Function to create a single slide element
 function makeSlide(src, idx){
     const s = document.createElement('div');
     s.className = 'slide';
@@ -153,13 +155,17 @@ function makeSlide(src, idx){
     return s;
 }
 
+// Builds the carousel with cloned slides for infinite loop effect
 function buildCarousel(){
     track.innerHTML = '';
     const first = makeSlide(images[0], 0);
     const last = makeSlide(images[images.length - 1], images.length - 1);
 
+    // Add cloned last slide to the beginning
     track.appendChild(last.cloneNode(true));
+    // Add all original slides
     images.forEach((src, i) => track.appendChild(makeSlide(src, i)));
+    // Add cloned first slide to the end
     track.appendChild(first.cloneNode(true));
 
     slides = Array.from(track.children);
@@ -176,14 +182,17 @@ function buildCarousel(){
     index = 1;
     applyTranslate(false);
     updateDots();
+    isMoving = false; // Reset the flag after initial setup
 }
 
+// Applies the CSS transform to the track
 function applyTranslate(animate = true){
     isMoving = true;
     track.style.transition = animate ? 'transform .35s cubic-bezier(.2,.9,.2,1)' : 'none';
     track.style.transform = `translateX(${-index * 100}%)`;
 }
 
+// Updates the active state of the dots
 function updateDots(){
     const dots = Array.from(dotsWrap.children);
     dots.forEach(d => d.classList.remove('active'));
@@ -191,6 +200,7 @@ function updateDots(){
     if(dots[imgIndex]) dots[imgIndex].classList.add('active');
 }
 
+// Navigates to a specific slide by its index
 function goTo(i){
     if(isMoving) return;
     index = i + 1;
@@ -198,28 +208,30 @@ function goTo(i){
     updateDots();
 }
 
-// buttons with click-throttle
+// Navigates to the next slide
 nextBtn.addEventListener('click', ()=>{
     if(isMoving) return;
     index++;
     applyTranslate();
 });
+
+// Navigates to the previous slide
 prevBtn.addEventListener('click', ()=>{
     if(isMoving) return;
     index--;
     applyTranslate();
 });
 
-// infinite loop
+// Handles the infinite loop effect after a transition
 track.addEventListener('transitionend', ()=>{
     if(index === 0) index = images.length;
     if(index === images.length + 1) index = 1;
     applyTranslate(false);
     updateDots();
-    isMoving = false;
+    isMoving = false; // Reset flag after transition
 });
 
-// --- drag support ---
+// --- Drag support ---
 const dragStart = (e) => {
     isDragging = true;
     startX = e.clientX || e.touches[0].clientX;
@@ -258,6 +270,7 @@ const dragEnd = (e) => {
     if (e.pointerId) {
         track.releasePointerCapture(e.pointerId);
     }
+    isMoving = false; // Reset the flag after drag ends
 };
 
 // Use pointer events for unified mouse and touch handling
